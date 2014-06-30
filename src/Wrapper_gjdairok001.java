@@ -387,10 +387,10 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 							info[3] = cityName2;					//到达城市
 							info[4] = td2Date.trim().split(" ")[0]; //到达日期
 							info[5] = td2Date.trim().split(" ")[1]; //到达日期
-							info[6] = trContentArr[5].replace("?", ""); //航班号信息
+							info[6] = trContentArr[5].replaceAll(String.valueOf((char)160), "");//航班号信息
 						
 							list.add(info);
-							flightNo += trContentArr[5].replace("?", "") + ",";
+							flightNo += trContentArr[5].replaceAll(String.valueOf((char)160), "") + ",";
 						}
 						
 						// 得到第二个航班号 nextrow
@@ -418,13 +418,14 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 							info[3] = cityName2;					//到达城市
 							info[4] = td2Date.trim().split(" ")[0]; //到达日期
 							info[5] = td2Date.trim().split(" ")[1]; //到达日期
-							info[6] = trnContentArr[2].replace("?", ""); //航班号信息
+							info[6] = trnContentArr[2].replaceAll(String.valueOf((char)160), ""); //航班号信息
 			
 							list.add(info);
-							flightNo += trnContentArr[2].replace("?", "") + ",";
+							flightNo += trnContentArr[2].replaceAll(String.valueOf((char)160), "") + ",";
 						}
 					}
 				}
+				System.out.println(flightNo+"==============得到的航班号信息");
 				//将查询的值封装到map集合中
 				map.put("flightNo", flightNo);
 				map.put("flightlist", list);
