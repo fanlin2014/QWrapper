@@ -18,6 +18,7 @@ import com.qunar.qfwrapper.constants.Constants;
 import com.qunar.qfwrapper.interfaces.QunarCrawler;
 import com.qunar.qfwrapper.util.QFGetMethod;
 import com.qunar.qfwrapper.util.QFHttpClient;
+import com.travelco.rdf.infocenter.InfoCenter;
 
 /**
  * 返程
@@ -43,9 +44,9 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		Wrapper_gjsairok001 t = new Wrapper_gjsairok001();
 		// 得到请求返回的html网页
 		String html = t.getHtml(searchParam);
+		System.out.println("********************得到了请求返回的网页"+html);
 		// 将网页的结果进行封装
 		t.process(html, searchParam);
-		
 	}
 	
 	// 双程
@@ -62,15 +63,14 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		String[] retArray = arg0.getRetDate().split("-");   //回返日期
 	
 		//处理出发地点，到达地点  
-		String dep0 = arg0.getDep();//出发地点  只会输入三字节码，需要转换(经测试不需转换)
-		String arr0 = arg0.getArr();//到达地点  只会输入三字节码，需要转换（经测试不需转换）
-
+		String dep0 = getCityFromCode(arg0.getDep());//出发地点  只会输入三字节码，需要转换
+		String arr0 = getCityFromCode(arg0.getArr());//到达地点  只会输入三字节码，需要转换
 		map.put("next","1");
 		map.put("cabinPreference","");
 		map.put("password","1");
-		map.put("PRICER_PREF	FRP","");
+		map.put("PRICER_PREF","FRP");
 		map.put("AIRLINES","ok");
-		map.put("ID_LOCATION	CZ","");
+		map.put("ID_LOCATION","CZ");
 		map.put("JOURNEY_TYPE","RT");	//双程类型不一致
 		map.put("DEP_0",dep0);
 		map.put("ARR_0",arr0);
@@ -114,17 +114,19 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			String month_select = java.net.URLEncoder.encode(month + "/" +year,"UTF-8");
 			String month_select1 = java.net.URLEncoder.encode(month2 + "/" +year2,"UTF-8");
 			
-			String dep0 = arg0.getDep();//出发地点  只会输入三字节码，
-			String arr0 = arg0.getArr();//到达地点  只会输入三字节码，
+			String dep0 = getCityFromCode(arg0.getDep());//出发地点  只会输入三字节码，需要转换
+			String arr0 = getCityFromCode(arg0.getArr());//到达地点  只会输入三字节码，需要转换  
+			dep0 = java.net.URLEncoder.encode(dep0,"UTF-8");
+			arr0 = java.net.URLEncoder.encode(arr0,"UTF-8");
 			
 			String url = "http://secure.csa.cz/en/ibs/?next=1&cabinPreference=&password=1&PRICER_PREF=FRP&AIRLINES=ok&ID_LOCATION=CZ&" +
 					"JOURNEY_TYPE=RT&DEP_0="+dep0+"&ARR_0="+arr0+"&DEP_1=&ARR_1=&" +
 					"DAY_0="+day+"&MONTH_SEL_0="+month_select+"&DAY_1="+day2+"&MONTH_SEL_1="+month_select1+"&ADTCOUNT=1&CHDCOUNT=0&INFCOUNT=0";
-//			//实际请求的url地址
+			//实际请求的url地址
 //			url="http://secure.csa.cz/en/ibs/?next=1&cabinPreference=&password=1&PRICER_PREF=FRP&AIRLINES=ok&ID_LOCATION=CZ&" +
 //					"JOURNEY_TYPE=RT&DEP_0=Prague%2B%28PRG%29&ARR_0=Ho%2BChi%2BMinh%2BCity%2B%28SGN%29&DEP_1=&ARR_1=&" +
 //					"DAY_0=23&MONTH_SEL_0=8%2F2014&DAY_1=29&MONTH_SEL_1=8%2F2014&ADTCOUNT=1&CHDCOUNT=0&INFCOUNT=0";
-//			// 进行的是get请求，创建get方法的实例
+			// 进行的是get请求，创建get方法的实例
 			get = new QFGetMethod(url);
 			get.getParams().setContentCharset("utf-8");
 			httpClient.executeMethod(get);
@@ -190,7 +192,6 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			//进行第6次请求，得到最终的结果的html网页，在上次请求多封装了个参数
 			String url6 = url5 + "&itineraryId0="+itineraryId0;
 			get = new QFGetMethod(url6); 
-			get.getParams().setContentCharset("utf-8");
 			get.setRequestHeader("Referer", url2);
 			httpClient.executeMethod(get);
 		
@@ -208,40 +209,37 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 	}
 	
 	public ProcessResultInfo process(String html, FlightSearchParam fightSearchParam) {
-		System.out.println("process");
+		System.out.println("**************************处理价格信息，封装最终结果");
 		/* ProcessResultInfo中，
 		 * ret为true时，status可以为：SUCCESS(抓取到机票价格)|NO_RESULT(无结果，没有可卖的机票)
 		 * ret为false时，status可以为:CONNECTION_FAIL|INVALID_DATE|INVALID_AIRLINE|PARSING_FAIL|PARAM_ERROR
 		 */
 		ProcessResultInfo result = new ProcessResultInfo();
-		System.out.println("=============1");
 		if ("Exception".equals(html)) {	
 			result.setRet(false);
 			result.setStatus(Constants.CONNECTION_FAIL);
 			return result;			
 		}		
 		//需要有明显的提示语句，才能判断是否INVALID_DATE|INVALID_AIRLINE|NO_RESULT
-		if (html.contains("We are sorry, the departure flight does not operate or has no availability for the date")) {
+		//if (html.contains("We are sorry, the departure flight does not operate or has no availability for the date")) {
+		if(html.contains("There are no available flights to your destination. Please choose another departure date.")){
 			result.setRet(false);
 			result.setStatus(Constants.INVALID_DATE);
 			return result;			
 		}
-		System.out.println("=============2");
+
 		try {
 			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 			String[] price = parsePrice(html);
 			if (price == null || price.length != 3) {
 				throw new Exception("parse price fail");
 			}
-
-			System.out.println("价钱获取完毕");
 			List<String[]> flightNo = parseFightNo(html);
 			if (flightNo == null || flightNo.size() == 0) {
 				throw new Exception("parse flight no fail");
 			}
-			System.out.println("航班号获取完毕");
 			String depYear = StringUtils.substringBefore(fightSearchParam.getDepDate(), "-");
-			String[] dateTime = parseDateTime(html, depYear);  //======================================================待处理日期、时间（缺少一部分）
+			String[] dateTime = parseDateTime(html, depYear);  
 			//if (dateTime == null || dateTime.length != 8) {
 			if (dateTime == null || dateTime.length == 0) {
 				throw new Exception("parse date time fail");
@@ -274,19 +272,19 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 				if (i == 0) {
 					outSeg.setDepDate(dateTime[0]);
 					outSeg.setDeptime(dateTime[1]);
-					outSeg.setDepairport(fightSearchParam.getDep());
-				} else {
-					outSeg.setDepairport(outIt.get(i)[0].replace("(", "").replace(")", ""));
-				}
-				
-				if (i == flightNo.get(0).length - 1) {
 					outSeg.setArrDate(dateTime[2]);
 					outSeg.setArrtime(dateTime[3]);
-					outSeg.setArrairport(fightSearchParam.getArr());
-				} else {
+					outSeg.setDepairport(outIt.get(i)[0].replace("(", "").replace(")", ""));
+					outSeg.setArrairport(outIt.get(i)[1].replace("(", "").replace(")", ""));
+					
+				} else if (i == flightNo.get(0).length - 1){
+					outSeg.setDepDate(dateTime[4]);
+					outSeg.setDeptime(dateTime[5]);
+					outSeg.setArrDate(dateTime[6]);
+					outSeg.setArrtime(dateTime[7]);
+					outSeg.setDepairport(outIt.get(i)[0].replace("(", "").replace(")", ""));
 					outSeg.setArrairport(outIt.get(i)[1].replace("(", "").replace(")", ""));
 				}
-
 				outSeg.setFlightno(flightNo.get(0)[i]);
 				segs.add(outSeg);
 			}
@@ -297,18 +295,18 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 				//FlightSegement retSeg = new FlightSegement(flightNo.get(1)[i]);
 				FlightSegement retSeg = new FlightSegement();
 				if (i == 0) {
-					retSeg.setDepDate(dateTime[4]);
-					retSeg.setDeptime(dateTime[5]);
+					retSeg.setDepDate(dateTime[8]);
+					retSeg.setDeptime(dateTime[9]);
+					retSeg.setArrDate(dateTime[10]);
+					retSeg.setArrtime(dateTime[11]);	
 					retSeg.setDepairport(fightSearchParam.getArr());
-				} else {
+					retSeg.setArrairport(retIt.get(i)[1].replace("(", "").replace(")", ""));
+				} else if (i == flightNo.get(1).length - 1) {
+					retSeg.setDepDate(dateTime[12]);
+					retSeg.setDeptime(dateTime[13]);
+					retSeg.setArrDate(dateTime[14]);
+					retSeg.setArrtime(dateTime[15]);	
 					retSeg.setDepairport(retIt.get(i)[0].replace("(", "").replace(")", ""));
-				}
-
-				if (i == flightNo.get(1).length - 1) {
-					retSeg.setArrDate(dateTime[6]);
-					retSeg.setArrtime(dateTime[7]);	
-					retSeg.setArrairport(fightSearchParam.getDep());
-				} else {
 					retSeg.setArrairport(retIt.get(i)[1].replace("(", "").replace(")", ""));
 				}
 				retSeg.setFlightno(flightNo.get(1)[i]);
@@ -331,7 +329,7 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			result.setRet(true);
 			result.setStatus(Constants.SUCCESS);
 			result.setData(flightList);
-			System.out.println("result");
+			System.out.println("******************************************************返回了最终的结果result");
 			return result;
 		} catch(Exception e){
 			result.setRet(false);
@@ -422,41 +420,72 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 	 * @return  0: 去程出发日期
 	 * 			1: 去程出发时间
 	 * 			2: 去程到达日期
-	 *          3: 去程到达时间
+	 *          3: 去程到达时间  去1 
 	 *          
-	 *          4: 回程出发日期
-	 *          5: 回程出发时间
-	 *          6: 回程到达日期
-	 *          7: 回程到达时间
+	 *          4: 去程出发日期
+	 * 			5: 去程出发时间
+	 * 			6: 去程到达日期
+	 *          7: 去程到达时间  去2 
+	 *          
+	 *          8: 回程出发日期
+	 *          9: 回程出发时间
+	 *          10: 回程到达日期
+	 *          11: 回程到达时间 回1
+	 *          
+	 *          12: 回程出发日期
+	 *          13: 回程出发时间
+	 *          14: 回程到达日期
+	 *          15: 回程到达时间 回2
 	 */
 	private String[] parseDateTime(String html, String depYear) {
+		String[] result = new String[16];
+		try{
+			int idx = 0;
+			//获取内容有效的部分
+			String htmlTemp = StringUtils.substringBetween(html, "<h4>Your selected flights</h4>", "</div>") ;
+			htmlTemp = StringUtils.substringBetween(htmlTemp, "<tbody", "</tbody>") ;
+			String[] trArry = StringUtils.substringsBetween(htmlTemp, "<tr", "</tr>");
+			//去程1
+			String[] qc = StringUtils.substringsBetween(trArry[0],"<strong>","</strong>");
+			String[] qc1 = qc[0].split(" ");
+			result[idx++] = formateDate(qc1[0]);    //2014/Aug/23
+			result[idx++] = qc1[1];    
+			String[] qc2 = qc[1].split(" ");
+			result[idx++] = formateDate(qc2[0]);    
+			result[idx++] = qc2[1];
 
-		String[] result = new String[8];
-		int idx = 0;
-		//获取内容有效的部分
-		String htmlTemp = StringUtils.substringBetween(html, "<h4>Your selected flights</h4>", "</div>") ;
-		htmlTemp = StringUtils.substringBetween(htmlTemp, "<tbody", "</tbody>") ;
-		System.out.println("获取时间信息--" + htmlTemp);
-		String[] trArry = StringUtils.substringsBetween(htmlTemp, "<tr", "</tr>");
-		System.out.println(trArry.length+"==========trArry length");
-		//去程
-		String[] qc = StringUtils.substringsBetween(trArry[0],"<strong>","</strong>");
-		System.out.println(qc.length+"-------qclength");
-		String[] qc1 = qc[0].split(" ");
-		result[idx++] = formateDate(qc1[0]);    //2014/Aug/23
-		result[idx++] = qc1[1];    
-		String[] qc2 = qc[1].split(" ");
-		result[idx++] = formateDate(qc2[0]);    
-		result[idx++] = qc2[1];
-		//回程
-		String[] hc = StringUtils.substringsBetween(trArry[2],"<strong>","</strong>");
-		System.out.println(hc.length+"-------hclength");
-		String[] hc1 = hc[0].split(" ");
-		result[idx++] = formateDate(hc1[0]);
-		result[idx++] = hc1[1];
-		String[] hc2 = hc[1].split(" ");
-		result[idx++] = formateDate(hc2[0]);
-		result[idx++] = hc2[1];
+			//去程2
+			String[] qcOther = StringUtils.substringsBetween(trArry[1],"<strong>","</strong>");
+			String[] qcOther1 = qcOther[0].split(" ");
+			result[idx++] = formateDate(qcOther1[0]);    //2014/Aug/23
+			result[idx++] = qcOther1[1];    
+			String[] qcOther2 = qcOther[1].split(" ");
+			result[idx++] = formateDate(qcOther2[0]);    
+			result[idx++] = qcOther2[1];
+			
+			System.out.println("**************************************获取去程时间信息");
+			//回程1
+			String[] hc = StringUtils.substringsBetween(trArry[2],"<strong>","</strong>");
+			String[] hc1 = hc[0].split(" ");
+			result[idx++] = formateDate(hc1[0]);
+			result[idx++] = hc1[1];
+			String[] hc2 = hc[1].split(" ");
+			result[idx++] = formateDate(hc2[0]);
+			result[idx++] = hc2[1];
+			
+			//回程2
+			String[] hcOther = StringUtils.substringsBetween(trArry[3],"<strong>","</strong>");
+			String[] hcOther1 = hcOther[0].split(" ");
+			result[idx++] = formateDate(hcOther1[0]);
+			result[idx++] = hcOther1[1];
+			String[] hcOther2 = hcOther[1].split(" ");
+			result[idx++] = formateDate(hcOther2[0]);
+			result[idx++] = hcOther2[1];
+			System.out.println("**************************************获取回程的时间信息");
+			return result;
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		return result;
 	}
 	// 英文转月份
@@ -514,7 +543,6 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		String[] qc2Arry = qc2.split(" ");
 		arry1[1] = qc2Arry[qc2Arry.length - 1];
 		
-		System.out.println(arry1[0]+"--"+arry1[1]);
 		// 去程 2
 		String[] arry2 = new String[2];
 		String tdArry1[] = StringUtils.substringsBetween(trArry[bj+1],"<td>","</td>");
@@ -526,11 +554,17 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		String qc4 = tdArry1[1].substring(0, tdArry1[1].indexOf("<br/>"));
 		String[] qc4Arry = qc4.trim().split(" ");
 		arry2[1] = qc4Arry[qc4Arry.length - 1];
+		System.out.println("********************************************************获取航班号信息");
 		list.add(arry1);
 		list.add(arry2);
 		return list;
 	}
-	
+	//得到城市名称
+	private String getCityFromCode(String code){
+		String cityName = InfoCenter.transformCityName(InfoCenter.getCityFromCityCode(code, null), "en").toLowerCase();
+		cityName = cityName.replace(" ", "+") + "+(" + code +")";
+		return cityName;
+	}
 	// 处理日期字符串  date = "2014/Aug/23";  得到 2014-08-23
 	private String formateDate(String date){
 		String[] dateArry= date.split("/");
