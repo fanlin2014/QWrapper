@@ -44,9 +44,10 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 		String[] dateArry = date.split("-");
 		
 		//处理出发地点，到达地点  
-		String dep0 = arg0.getDep();//出发地点  只会输入三字节码，需要转换（测试后不需要转换）
-		String arr0 = arg0.getArr();//到达地点  只会输入三字节码，需要转换（测试后不需要转换）
-		
+//		String dep0 = arg0.getDep();//出发地点  只会输入三字节码，需要转换（测试后不需要转换）
+//		String arr0 = arg0.getArr();//到达地点  只会输入三字节码，需要转换（测试后不需要转换）
+		String dep0 = getCityFromCode(arg0.getDep());//出发地点  只会输入三字节码，需要转换
+		String arr0 = getCityFromCode(arg0.getArr());//到达地点  只会输入三字节码，需要转换
 		map.put("next","1");
 		map.put("cabinPreference","");
 		map.put("password","1");
@@ -386,10 +387,10 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 							info[3] = cityName2;					//到达城市
 							info[4] = td2Date.trim().split(" ")[0]; //到达日期
 							info[5] = td2Date.trim().split(" ")[1]; //到达日期
-							info[6] = trContentArr[5].replace("?", " "); //航班号信息
+							info[6] = trContentArr[5].replace("?", ""); //航班号信息
 						
 							list.add(info);
-							flightNo += trContentArr[5].replace("?", " ") + ",";
+							flightNo += trContentArr[5].replace("?", "") + ",";
 						}
 						
 						// 得到第二个航班号 nextrow
@@ -417,10 +418,10 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 							info[3] = cityName2;					//到达城市
 							info[4] = td2Date.trim().split(" ")[0]; //到达日期
 							info[5] = td2Date.trim().split(" ")[1]; //到达日期
-							info[6] = trnContentArr[2].replace("?", " "); //航班号信息
+							info[6] = trnContentArr[2].replace("?", ""); //航班号信息
 			
 							list.add(info);
-							flightNo += trnContentArr[2].replace("?", " ") + ",";
+							flightNo += trnContentArr[2].replace("?", "") + ",";
 						}
 					}
 				}
