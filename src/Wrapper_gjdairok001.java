@@ -51,9 +51,9 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 		map.put("next","1");
 		map.put("cabinPreference","");
 		map.put("password","1");
-		map.put("PRICER_PREF	FRP","");
+		map.put("PRICER_PREF","FRP");
 		map.put("AIRLINES","ok");
-		map.put("ID_LOCATION	CZ","");
+		map.put("ID_LOCATION","CZ");
 		map.put("JOURNEY_TYPE","OW");
 		map.put("DEP_0",dep0);
 		map.put("ARR_0",arr0);
