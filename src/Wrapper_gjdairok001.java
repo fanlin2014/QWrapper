@@ -17,6 +17,7 @@ import com.qunar.qfwrapper.constants.Constants;
 import com.qunar.qfwrapper.interfaces.QunarCrawler;
 import com.qunar.qfwrapper.util.QFGetMethod;
 import com.qunar.qfwrapper.util.QFHttpClient;
+import com.travelco.rdf.infocenter.InfoCenter;
 
 /**
  * 单程数据方法
@@ -88,20 +89,21 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 			// 如果有特殊的字符，需要对特殊字符进行编码
 			String month_select = java.net.URLEncoder.encode(month + "/" +year,"UTF-8");
 	
-//			String dep0 = getCityFromCode(arg0.getDep());//出发地点  只会输入三字节码，需要转换
-//			String arr0 = getCityFromCode(arg0.getArr());//到达地点  只会输入三字节码，需要转换
-			String dep0 = arg0.getDep();//出发地点  
-			String arr0 = arg0.getArr();//到达地点  
-//			dep0 = java.net.URLEncoder.encode(dep0,"UTF-8");
-//			arr0 = java.net.URLEncoder.encode(arr0,"UTF-8");
-
+			String dep0 = getCityFromCode(arg0.getDep());//出发地点  只会输入三字节码，需要转换
+			String arr0 = getCityFromCode(arg0.getArr());//到达地点  只会输入三字节码，需要转换
+			//String dep0 = arg0.getDep();//出发地点  
+			//String arr0 = arg0.getArr();//到达地点  
+			dep0 = java.net.URLEncoder.encode(dep0,"UTF-8");
+			arr0 = java.net.URLEncoder.encode(arr0,"UTF-8");
 			
 			String url = "http://secure.csa.cz/en/ibs/?next=1&cabinPreference=&password=1&PRICER_PREF=FRP&" +
 				"AIRLINES=ok&ID_LOCATION=CZ&JOURNEY_TYPE=OW&DEP_1=&ARR_1=" +
 				"&DEP_0="+dep0+"&ARR_0="+ arr0 +"&DAY_0=" +day+"&MONTH_SEL_0="+month_select +
 				"&DAY_1="+day+"&MONTH_SEL_1="+month_select+"&ADTCOUNT=1&CHDCOUNT=0&INFCOUNT=0";
-			
-			// 进行的是get请求，创建get方法的实例
+            System.out.println(url+"===");
+            //url = "http://secure.csa.cz/en/ibs/?next=1&cabinPreference=&password=1&PRICER_PREF=FRP&AIRLINES=ok&ID_LOCATION=CZ&JOURNEY_TYPE=OW&DEP_0=Prague%2B%28PRG%29&ARR_0=Ho%2BChi%2BMinh%2BCity%2B%28SGN%29&DEP_1=&ARR_1=&DAY_0=23&MONTH_SEL_0=8%2F2014&DAY_1=23&MONTH_SEL_1=8%2F2014&ADTCOUNT=1&CHDCOUNT=0&INFCOUNT=0";
+				
+            // 进行的是get请求，创建get方法的实例
 			QFGetMethod get = new QFGetMethod(url);
 			get.getParams().setContentCharset("utf-8");
 			httpClient.executeMethod(get);
@@ -159,7 +161,8 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 			return result;			
 		}		
 		// 需要有明显的提示语句，才能判断是否INVALID_DATE|INVALID_AIRLINE|NO_RESULT
-		if (html.contains("We are sorry, the departure flight does not operate or has no availability for the date")) {
+		//if (html.contains("We are sorry, the departure flight does not operate or has no availability for the date")) {
+		if(html.contains("There are no available flights to your destination. Please choose another departure date.")){
 			result.setRet(false);
 			result.setStatus(Constants.INVALID_DATE);
 			return result;			
@@ -232,6 +235,7 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 			result.setData(flightList);
 			result.setRet(true);
 			result.setStatus(Constants.SUCCESS);
+			System.out.println("返回处理的结果！！===============================");
 			return result;
 		}catch(Exception e){
 			result.setRet(false);
@@ -275,6 +279,11 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 		return price;
 	}
 	
+	private String getCityFromCode(String code){
+		String cityName = InfoCenter.transformCityName(InfoCenter.getCityFromCityCode(code, null), "en").toLowerCase();
+		cityName = cityName.replace(" ", "+") + "+(" + code +")";
+		return cityName;
+	}
 	public String formatPrice(String price){
 		String priceTemp = "";
 		String tags = "[,\\.\\s;!?]+";
