@@ -395,14 +395,14 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		for(int i = 0;i<arryCf.length;i++){
 			//得到所有的td
 			tdArry = StringUtils.substringsBetween(arryCf[i],"<td>","</td>");
-			String flightNo = tdArry[tdArry.length-2];
+			String flightNo = tdArry[tdArry.length-2].replaceAll(String.valueOf((char)160), ""); //处理航班号空格
 			flightnoFirst +=  flightNo +",";
 		}
 		//next_row
 		for(int i = 0;i<arryFh.length;i++){
 			//得到所有的td
 			td1Arry = StringUtils.substringsBetween(arryFh[i],"<td>","</td>");
-			String flightNo = td1Arry[td1Arry.length-2];
+			String flightNo = td1Arry[td1Arry.length-2].replaceAll(String.valueOf((char)160), "");
 			flightnonext += flightNo + ","; 
 		}
 		// 拼装去的航班号信息，返回的航班号信息
