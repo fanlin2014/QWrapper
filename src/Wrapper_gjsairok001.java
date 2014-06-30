@@ -172,7 +172,6 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			int start4 = content4.lastIndexOf(arg0.getRetDate());   // ("2014-08-29");
 			String content4Temp = content4.substring(0, start4 + arg0.getRetDate().trim().length());
 			String fareId1 = content4Temp.substring(content4Temp.lastIndexOf("value=")+7, content4Temp.length());
-			System.out.println("fareId==========给到第四次请求的参数"+fareId1);
 			fareId1 = java.net.URLEncoder.encode(fareId1, "UTF-8");//对特殊字符进行编码
 			
 			// 进行第5次请求获取到结果 
@@ -190,9 +189,10 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			itineraryId0 = java.net.URLEncoder.encode(itineraryId0, "UTF-8");
 			
 			//进行第6次请求，得到最终的结果的html网页，在上次请求多封装了个参数
-			String url6 = url5 + "&itineraryId0="+itineraryId0;
+			String url6 = "http://secure.csa.cz/en/ibs/ajaxSectorItineraryOffer.php?sector=1&"+url2sid +"&fareId0="+fareId0+"&fareId1="+fareId1+ "&itineraryId0="+itineraryId0;
 			get = new QFGetMethod(url6); 
 			get.setRequestHeader("Referer", url2);
+			get.getParams().setContentCharset("utf-8");
 			httpClient.executeMethod(get);
 		
 			contentFinal = get.getResponseBodyAsString(); // 得到的最终返回的网页
@@ -559,7 +559,7 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 		list.add(arry2);
 		return list;
 	}
-	//得到城市名称
+//	//得到城市名称
 	private String getCityFromCode(String code){
 		String cityName = InfoCenter.transformCityName(InfoCenter.getCityFromCityCode(code, null), "en").toLowerCase();
 		cityName = cityName.replace(" ", "+") + "+(" + code +")";
