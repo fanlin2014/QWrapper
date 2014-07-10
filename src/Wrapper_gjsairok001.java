@@ -258,7 +258,7 @@ public class Wrapper_gjsairok001  implements QunarCrawler{
 			
 			flightDetail.setMonetaryunit(price[0].trim().toUpperCase());
 			flightDetail.setTax(Double.parseDouble(price[2]));//总的税费，包括燃油附加费、小费、服务费    // 获取的只有总的税费
-			flightDetail.setPrice(Double.parseDouble(price[1]) + Double.parseDouble(price[2]));   // 获取的只有总的价钱
+			flightDetail.setPrice(Double.parseDouble(price[1]));   // 获取的只有总的价钱
 			List<String> flightNoList = new ArrayList<String>();
 			for (String q : flightNo.get(0)) {
 				flightNoList.add(q);
