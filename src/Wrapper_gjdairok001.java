@@ -213,13 +213,13 @@ public class Wrapper_gjdairok001 implements QunarCrawler{
 			for(int i =0 ;i<iter.size();i++){
 				FlightSegement seg = new FlightSegement();
 				seg.setFlightno(iter.get(i)[6]); //航班号
-				seg.setArrDate(formateDate(iter.get(i)[1]));//出发日期 2014/Aug/23 需格式化
-				seg.setArrtime(iter.get(i)[2]); //出发时间 14:10
+				seg.setArrDate(formateDate(iter.get(i)[4]));//出发日期 2014/Aug/23 需格式化
+				seg.setArrtime(iter.get(i)[5]); //出发时间 14:10
 				String arrPort = iter.get(i)[0];
 				seg.setArrairport(arrPort);//出发机场 (PRG) 需要得到机场信息
 				
-				seg.setDepDate(formateDate(iter.get(i)[4])); //到达日期	
-				seg.setDeptime(iter.get(i)[5]); 	//到达时间 
+				seg.setDepDate(formateDate(iter.get(i)[1])); //到达日期	
+				seg.setDeptime(iter.get(i)[2]); 	//到达时间 
 				String depPort = iter.get(i)[3];
 				seg.setDepairport(depPort);//到达机场 （ICN）需要得到机场信息
 				//将封装好的对象增加到集合中
